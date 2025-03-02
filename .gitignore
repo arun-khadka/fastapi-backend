@@ -1,0 +1,55 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env
+.env.local
+.env.*
+*.env
+
+# Logs and database files
+*.log
+*.sqlite3
+*.db
+*.sqlite
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# Docker-related files
+docker-compose.override.yml
+*.dockerfile
+
+# Testing and coverage
+.coverage
+htmlcov/
+pytest_cache/
+
+# Migrations (optional — if auto-generated)
+migrations/
+
+# Celery and Redis
+celerybeat-schedule
+*.pid
+
+# Jupyter notebooks (if you use them)
+.ipynb_checkpoints/
+
+# Static and media files (if you serve them via FastAPI)
+staticfiles/
+mediafiles/
+
+# Node.js (if 
