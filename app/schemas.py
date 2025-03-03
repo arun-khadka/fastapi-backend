@@ -1,11 +1,11 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
-# Great observation! While it may seem like we can create a shared config class to reduce repetition, 
-# Pydantic doesn’t support directly inheriting or sharing the Config class across multiple schemas. 
+# Great observation! While it may seem like we can create a shared config class to reduce repetition,
+# Pydantic doesn’t support directly inheriting or sharing the Config class across multiple schemas.
 # Each schema needs its own Config class, since the Config is tightly coupled with the schema's behavior.
-# However, if you're looking to reduce duplication, 
-# here's a clean trick: you can use a base schema class with shared configuration. 
+# However, if you're looking to reduce duplication,
+# here's a clean trick: you can use a base schema class with shared configuration.
 # Let me show you how:
 
 
@@ -25,6 +25,11 @@ class UserResponse(ConfigBase):
     id: int
     email: EmailStr
     created_at: datetime
+
+
+class UserLogin(ConfigBase):
+    email: EmailStr
+    password: str
 
 
 # Post Schemas - Base schema for Post (shared fields)

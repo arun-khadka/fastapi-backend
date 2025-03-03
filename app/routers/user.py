@@ -1,14 +1,12 @@
 from fastapi import Response, status, HTTPException, APIRouter, Depends
 from ..schemas import UserResponse
-from ..import utils, models, schemas
+from .. import utils, models, schemas
 from ..database import get_db
 from sqlalchemy.orm import Session
 from typing import List
 
-router = APIRouter(
-    prefix="/users",
-    tags=["Users"]
-)
+router = APIRouter(prefix="/users", tags=["Users"])
+
 
 # create user
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
