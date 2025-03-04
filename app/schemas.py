@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
@@ -31,6 +32,12 @@ class UserLogin(ConfigBase):
     email: EmailStr
     password: str
 
+class Token(ConfigBase):
+    access_token: str
+    token_type: str
+
+class TokenData(ConfigBase):
+    id: Optional[str] = None
 
 # Post Schemas - Base schema for Post (shared fields)
 class PostBase(ConfigBase):

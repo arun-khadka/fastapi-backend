@@ -1,6 +1,6 @@
 from fastapi import Response, status, HTTPException, APIRouter, Depends
 from ..schemas import UserResponse
-from .. import utils, models, schemas
+from .. import utils, models, schemas, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session
 from typing import List
@@ -10,12 +10,19 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 # create user
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    # current_user: int = Depends(oauth2.get_current_user),
+):
 
     # hash the password
     hashed_password = utils.hash_password(user.password)
     user.password = hashed_password
 
+    user.email = user.email.lower()
+
+    # Create new user
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
