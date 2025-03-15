@@ -32,12 +32,15 @@ class UserLogin(ConfigBase):
     email: EmailStr
     password: str
 
+
 class Token(ConfigBase):
     access_token: str
     token_type: str
 
+
 class TokenData(ConfigBase):
     id: Optional[str] = None
+
 
 # Post Schemas - Base schema for Post (shared fields)
 class PostBase(ConfigBase):
@@ -53,3 +56,6 @@ class PostCreate(PostBase):
 
 class PostResponse(PostBase):
     id: int
+    pass
+    created_at: datetime
+    owner_id: int
