@@ -3,7 +3,7 @@ from .. import models, schemas, oauth2
 from ..schemas import PostResponse
 from sqlalchemy.orm import Session
 from ..database import get_db
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -15,12 +15,21 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 def get_posts(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
+    limit: int = 15,
+    skip: int = 0,
+    search: Optional[str] = "",
 ):
     # cursor.execute(""" SELECT * FROM posts """)
     # posts = cursor.fetchall()
-
+    
+    # print(search)
     posts_query = db.query(models.Post).filter(models.Post.owner_id == current_user.id)
-    posts = posts_query.all()
+    posts = (
+        posts_query.filter(models.Post.title.contains(search))
+        .limit(limit)
+        .offset(skip)
+        .all()
+    )
 
     if not posts:
         raise HTTPException(

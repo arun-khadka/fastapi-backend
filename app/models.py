@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Relationship
 
 Base = declarative_base()
 
@@ -20,6 +21,7 @@ class Post(Base):
     owner_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
+    owner = Relationship("User")
 
 
 class User(Base):
