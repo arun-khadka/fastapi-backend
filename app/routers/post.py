@@ -14,6 +14,7 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 #     response_model=List[PostResponse],
 # )
 
+
 @router.get("/", response_model=List[PostOut])
 def get_posts(
     db: Session = Depends(get_db),
@@ -81,6 +82,57 @@ def get_posts(
     return formatted_results
 
 
+# get single post
+@router.get("/{id}", response_model=PostOut)
+def get_post(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    # cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id)))
+    # post = cursor.fetchone()
+
+    # post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = (
+        db.query(
+            models.Post,
+            func.count(models.Vote.posts_id).label("votes"),
+            models.User,  # Include owner details inside the post
+        )
+        .join(models.Vote, models.Vote.posts_id == models.Post.id, isouter=True)
+        .join(models.User, models.User.id == models.Post.owner_id)
+        .group_by(models.Post.id, models.User.id)
+        .filter(models.Post.id == id)
+        .first()
+    )
+
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found."
+        )
+
+    post_obj, votes, owner = post
+
+    # if post.owner_id != current_user.id:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Not authorized to access this post.",
+    #     )
+
+    # Convert SQLAlchemy models to dictionaries
+    return {
+        "post": {  
+            **post_obj.__dict__,
+            "owner": {
+                "id": owner.id,
+                "email": owner.email,
+                "created_at": owner.created_at,
+            },
+        },
+        "votes": votes,
+    }
+
+
 # create post
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=PostResponse)
 def create_posts(
@@ -100,32 +152,6 @@ def create_posts(
     db.refresh(new_post)
 
     return new_post
-
-
-# get single post
-@router.get("/{id}", response_model=PostResponse)
-def get_post(
-    id: int,
-    db: Session = Depends(get_db),
-    current_user: int = Depends(oauth2.get_current_user),
-):
-    # cursor.execute(""" SELECT * FROM posts WHERE id = %s """, (str(id)))
-    # post = cursor.fetchone()
-
-    post = db.query(models.Post).filter(models.Post.id == id).first()
-
-    if not post:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found."
-        )
-
-    if post.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this post.",
-        )
-
-    return post
 
 
 # update post
