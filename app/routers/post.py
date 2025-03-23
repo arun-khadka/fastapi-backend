@@ -1,17 +1,20 @@
 from fastapi import Response, status, HTTPException, APIRouter, Depends
 from .. import models, schemas, oauth2
-from ..schemas import PostResponse
+from ..schemas import PostResponse, PostOut
 from sqlalchemy.orm import Session
-from ..database import get_db
 from typing import List, Optional
+from ..database import get_db
+from sqlalchemy import func
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
 
-@router.get(
-    "/",
-    response_model=List[PostResponse],
-)
+# @router.get(
+#     "/",
+#     response_model=List[PostResponse],
+# )
+
+@router.get("/", response_model=List[PostOut])
 def get_posts(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
@@ -21,22 +24,61 @@ def get_posts(
 ):
     # cursor.execute(""" SELECT * FROM posts """)
     # posts = cursor.fetchall()
-    
+
     # print(search)
-    posts_query = db.query(models.Post).filter(models.Post.owner_id == current_user.id)
-    posts = (
-        posts_query.filter(models.Post.title.contains(search))
-        .limit(limit)
-        .offset(skip)
+
+    # posts_query = db.query(models.Post).filter(models.Post.owner_id == current_user.id)
+
+    # posts = (
+    #     posts_query.filter(models.Post.title.contains(search))
+    #     .limit(limit)
+    #     .offset(skip)
+    #     .all()
+    # )
+
+    # if not posts:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found"
+    #     )
+
+    # default join is left inner join
+    # Query posts with search functionality
+
+    post_query = (
+        db.query(
+            models.Post,
+            func.count(models.Vote.posts_id).label("votes"),
+            models.User,  # Include owner details inside the post
+        )
+        .join(models.Vote, models.Vote.posts_id == models.Post.id, isouter=True)
+        .join(
+            models.User, models.User.id == models.Post.owner_id
+        )  # Join with User table
+        .group_by(models.Post.id, models.User.id)
+        .filter(models.Post.title.contains(search))  # Apply search filter
+        .filter(models.Post.owner_id == current_user.id)  # Show only current user posts
+        .offset(skip)  # Pagination: Skip results
+        .limit(limit)  # Pagination: Limit results
         .all()
     )
 
-    if not posts:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found"
-        )
+    # Convert SQLAlchemy models to dictionaries
+    formatted_results = [
+        {
+            "post": {
+                **post.__dict__,
+                "owner": {
+                    "id": owner.id,
+                    "email": owner.email,
+                    "created_at": owner.created_at,
+                },
+            },
+            "votes": votes,
+        }
+        for post, votes, owner in post_query  # Unpack correctly
+    ]
 
-    return posts
+    return formatted_results
 
 
 # create post

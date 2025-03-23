@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
@@ -60,3 +60,12 @@ class PostResponse(PostBase):
     created_at: datetime
     owner_id: int
     owner: UserResponse
+
+class PostOut(ConfigBase):
+    post: PostResponse
+    votes: int
+
+
+class Vote(ConfigBase):
+    post_id: int
+    dir: Literal[0, 1]   # 0 = downvote, 1 = upvote
